@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://junichiakahori.github.io/hato-kusoge/sitemap.xml
+Sitemap: https://junichiakahori.github.io/apfelrose/sitemap.xml
