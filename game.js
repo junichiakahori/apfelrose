@@ -2247,16 +2247,25 @@ addTapListener('btn-submit-score', submitScore);
 
 // バージョン管理情報の動的ロード
 function loadVersionInfo() {
+  const updateVersionDOM = (data) => {
+    const versionEl = document.getElementById('footer-version');
+    const dateEl = document.getElementById('footer-date');
+    if (versionEl) versionEl.textContent = data.version;
+    if (dateEl) dateEl.textContent = `最終更新: ${data.lastUpdated}`;
+  };
+
+  if (window.gameVersionInfo) {
+    updateVersionDOM(window.gameVersionInfo);
+    return;
+  }
+
   fetch(`version.json?t=${Date.now()}`)
     .then(response => {
       if (!response.ok) throw new Error('Failed to load version.json');
       return response.json();
     })
     .then(data => {
-      const versionEl = document.getElementById('footer-version');
-      const dateEl = document.getElementById('footer-date');
-      if (versionEl) versionEl.textContent = data.version;
-      if (dateEl) dateEl.textContent = `最終更新: ${data.lastUpdated}`;
+      updateVersionDOM(data);
     })
     .catch(error => {
       console.warn('Could not load version info:', error);

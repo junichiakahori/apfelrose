@@ -215,6 +215,24 @@
     </div>
   </div>
 
-  <script src="game.js?v=1.0.1"></script>
+  <script>
+    // version.jsonから最新バージョン情報を取得してスクリプトを動的ロード（キャッシュ対策）
+    fetch(`version.json?t=${Date.now()}`)
+      .then(response => {
+        if (!response.ok) throw new Error();
+        return response.json();
+      })
+      .then(data => {
+        window.gameVersionInfo = data;
+        const script = document.createElement('script');
+        script.src = `game.js?v=${data.version}`;
+        document.body.appendChild(script);
+      })
+      .catch(() => {
+        const script = document.createElement('script');
+        script.src = 'game.js?v=' + Date.now();
+        document.body.appendChild(script);
+      });
+  </script>
 </body>
 </html>
