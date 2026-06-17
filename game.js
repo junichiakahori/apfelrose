@@ -1,5 +1,5 @@
 /**
- * ルミエのおそうじ大作戦 - game.js
+ * ロザリーのおそうじ大作戦 - game.js
  * 縦スクロール・ローグライト弾幕シューティングゲーム
  */
 
@@ -647,7 +647,7 @@ class Player {
       ctx.fill();
     }
 
-    // 2. メイドルミエの描画 (ベクターアート)
+    // 2. メイドロザリーの描画 (ベクターアート)
     // カチューシャ
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
@@ -1323,25 +1323,25 @@ const STORY_EVENTS = {
 
 const storyScripts = {
   [STORY_EVENTS.INTRO]: [
-    { speaker: 'ルミエ', text: 'システム再起動完了。……お久しぶりです、旦那様。' },
-    { speaker: 'ルミエ', text: '主がいなくなって久しいこの屋敷、ずいぶんとホコリが溜まってしまいました。' },
-    { speaker: 'ルミエ', text: 'システム内の「思い出データ」も、ノイズバグに侵食されているようです。' },
-    { speaker: 'ルミエ', text: 'ルミエ、これよりおそうじを開始します。……主の笑顔が遺る、この場所を守るために。' }
+    { speaker: 'ロザリー', text: 'システム再起動完了。……お久しぶりです、旦那様。' },
+    { speaker: 'ロザリー', text: '主がいなくなって久しいこの屋敷、ずいぶんとホコリが溜まってしまいました。' },
+    { speaker: 'ロザリー', text: 'システム内の「思い出データ」も、ノイズバグに侵食されているようです。' },
+    { speaker: 'ロザリー', text: 'ロザリー、これよりおそうじを開始します。……主の笑顔が遺る、この場所を守るために。' }
   ],
   [STORY_EVENTS.WAVE_ALERT]: [
-    { speaker: 'ルミエ', text: '警告：ノイズデータの密度が上昇中。' },
-    { speaker: 'ルミエ', text: '主の残した手紙、本棚の記憶が削れていきます……負けられません！' }
+    { speaker: 'ロザリー', text: '警告：ノイズデータの密度が上昇中。' },
+    { speaker: 'ロザリー', text: '主の残した手紙、本棚の記憶が削れていきます……負けられません！' }
   ],
   [STORY_EVENTS.BOSS_WARNING]: [
-    { speaker: 'ルミエ', text: '検知：コアシステムに巨大なメモリリーク（バグ源）を発見。' },
-    { speaker: 'ルミエ', text: '大掃除の時間です。すべてをきれいにして、本当の記憶を復元させましょう！' }
+    { speaker: 'ロザリー', text: '検知：コアシステムに巨大なメモリリーク（バグ源）を発見。' },
+    { speaker: 'ロザリー', text: '大掃除の時間です。すべてをきれいにして、本当の記憶を復元させましょう！' }
   ],
   [STORY_EVENTS.BOSS_DEFEATED]: [
-    { speaker: 'ルミエ', text: 'バグコアの消滅を確認。思い出データの修復が完了します。' },
-    { speaker: 'マスター (記録ログ)', text: '「ルミエ、最後まで屋敷を守ってくれてありがとう。」' },
+    { speaker: 'ロザリー', text: 'バグコアの消滅を確認。思い出データの修復が完了します。' },
+    { speaker: 'マスター (記録ログ)', text: '「ロザリー、最後まで屋敷を守ってくれてありがとう。」' },
     { speaker: 'マスター (記録ログ)', text: '「君はもう、十分にお掃除をしてくれた。これからは……自分の空を飛んでいいんだよ。」' },
-    { speaker: 'ルミエ', text: '……。はい、旦那様。' },
-    { speaker: 'ルミエ', text: 'おそうじ完了いたしました。……ルミエは、これからもあなたの思い出と共に、飛んでいきます。' }
+    { speaker: 'ロザリー', text: '……。はい、旦那様。' },
+    { speaker: 'ロザリー', text: 'おそうじ完了いたしました。……ロザリーは、これからもあなたの思い出と共に、飛んでいきます。' }
   ]
 };
 
@@ -1546,7 +1546,7 @@ function showUpgradeOverlay() {
     let isMeta = false;
 
     if (skill.key === 'heal') {
-      cardInfo = { name: 'ライフ回復', desc: 'ルミエのHPを1回復させます。', icon: '❤️' };
+      cardInfo = { name: 'ライフ回復', desc: 'ロザリーのHPを1回復させます。', icon: '❤️' };
       isMeta = true;
     } else if (skill.key === 'bomb') {
       cardInfo = { name: '大掃除ボムチャージ', desc: '大掃除ボムを1個追加します。', icon: '💣' };
@@ -1662,7 +1662,7 @@ function nextStoryLine() {
   const currentLine = currentStoryList[currentStoryIndex];
   document.getElementById('story-speaker').textContent = currentLine.speaker;
 
-  // 旦那様のセリフなら青っぽいネオン、ルミエならシアン
+  // 旦那様のセリフなら青っぽいネオン、ロザリーならシアン
   if (currentLine.speaker.includes('マスター')) {
     document.getElementById('story-speaker').style.color = varColor('--neon-pink');
     document.getElementById('story-speaker').style.textShadow = `0 0 8px ${varColor('--neon-pink')}`;
@@ -1946,7 +1946,7 @@ function endGame(isClear = false) {
     document.getElementById('player-name').value = savedName;
   } else {
     // ランダムなメイドIDを仮設定
-    document.getElementById('player-name').value = `メイド#${Math.floor(100 + Math.random() * 900)}`;
+    document.getElementById('player-name').value = `ロザリー#${Math.floor(100 + Math.random() * 900)}`;
   }
 
   overlay.classList.remove('hidden');
