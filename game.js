@@ -1,5 +1,5 @@
 /**
- * ロザリーのおそうじ大作戦 - game.js
+ * アプフェルローゼ 〜追憶のメロディ〜 - game.js
  * 縦スクロール・ローグライト弾幕シューティングゲーム
  */
 
@@ -1249,13 +1249,25 @@ class XpItem {
       ctx.bezierCurveTo(x + 12, y + 2, x + 6, y - 6, x, y);
       ctx.fill();
     } else {
-      // 記憶の結晶（ひし形）
+      // 記憶のリンゴ（赤リンゴ・葉っぱ付き）
+      ctx.fillStyle = '#ff2a55'; // ネオンレッド
       ctx.beginPath();
-      ctx.moveTo(this.x, this.y - 6);
-      ctx.lineTo(this.x + 5, this.y);
-      ctx.lineTo(this.x, this.y + 6);
-      ctx.lineTo(this.x - 5, this.y);
-      ctx.closePath();
+      ctx.arc(this.x - 2, this.y, 4, 0, Math.PI * 2);
+      ctx.arc(this.x + 2, this.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // 茎 (茶色)
+      ctx.strokeStyle = '#8b5a2b';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(this.x, this.y - 2);
+      ctx.quadraticCurveTo(this.x + 1, this.y - 5, this.x + 2, this.y - 7);
+      ctx.stroke();
+
+      // 葉っぱ (緑)
+      ctx.fillStyle = '#00ff66';
+      ctx.beginPath();
+      ctx.ellipse(this.x + 2, this.y - 6, 2, 1, Math.PI / 4, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
