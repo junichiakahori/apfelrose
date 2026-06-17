@@ -647,15 +647,14 @@ class Player {
       ctx.fill();
     }
 
-    // 2. メイドロザリーの描画 (ベクターアート)
-    // カチューシャ
-    ctx.fillStyle = '#ffffff';
+    // 2. ロザリー・スカーレットの描画 (ベクターアート・お嬢様仕様)
+    // 後ろ髪 (金髪)
+    ctx.fillStyle = '#fcd057';
     ctx.beginPath();
-    ctx.arc(this.x, this.y - 12, 8, Math.PI, 0);
+    ctx.arc(this.x, this.y + 4, 12, 0, Math.PI * 2);
     ctx.fill();
 
-    // 髪の毛 (こげ茶)
-    ctx.fillStyle = '#3a271d';
+    // 頭部・前髪 (金髪)
     ctx.beginPath();
     ctx.arc(this.x, this.y - 4, 10, 0, Math.PI * 2);
     ctx.fill();
@@ -666,30 +665,37 @@ class Player {
     ctx.arc(this.x, this.y - 2, 8, 0, Math.PI * 2);
     ctx.fill();
 
-    // 服 (黒)とエプロン(白)
-    ctx.fillStyle = '#111113';
+    // 薔薇の髪飾り (赤)
+    ctx.fillStyle = '#d3003f';
     ctx.beginPath();
-    ctx.moveTo(this.x - 10, this.y + 12);
-    ctx.lineTo(this.x + 10, this.y + 12);
+    ctx.arc(this.x + 8, this.y - 10, 3, 0, Math.PI * 2);
+    ctx.arc(this.x - 8, this.y - 10, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 服 (赤いドレス)
+    ctx.fillStyle = '#c00030';
+    ctx.beginPath();
+    ctx.moveTo(this.x - 11, this.y + 12);
+    ctx.lineTo(this.x + 11, this.y + 12);
     ctx.lineTo(this.x + 6, this.y - 2);
     ctx.lineTo(this.x - 6, this.y - 2);
     ctx.closePath();
     ctx.fill();
 
-    // エプロン (白)
+    // フリルセンター (白)
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.moveTo(this.x - 5, this.y + 12);
-    ctx.lineTo(this.x + 5, this.y + 12);
-    ctx.lineTo(this.x + 3, this.y + 3);
-    ctx.lineTo(this.x - 3, this.y + 3);
+    ctx.moveTo(this.x - 4, this.y + 12);
+    ctx.lineTo(this.x + 4, this.y + 12);
+    ctx.lineTo(this.x + 2, this.y + 2);
+    ctx.lineTo(this.x - 2, this.y + 2);
     ctx.closePath();
     ctx.fill();
 
-    // リボン (ピンク)
-    ctx.fillStyle = varColor('--neon-pink');
+    // 飾り (ゴールド)
+    ctx.fillStyle = '#ffd700';
     ctx.beginPath();
-    ctx.arc(this.x, this.y + 3, 2, 0, Math.PI * 2);
+    ctx.arc(this.x, this.y + 4, 2, 0, Math.PI * 2);
     ctx.fill();
 
     // 3. 自機かすり判定（薄い円）
@@ -1323,25 +1329,25 @@ const STORY_EVENTS = {
 
 const storyScripts = {
   [STORY_EVENTS.INTRO]: [
-    { speaker: 'ロザリー', text: 'システム再起動完了。……お久しぶりです、旦那様。' },
-    { speaker: 'ロザリー', text: '主がいなくなって久しいこの屋敷、ずいぶんとホコリが溜まってしまいました。' },
-    { speaker: 'ロザリー', text: 'システム内の「思い出データ」も、ノイズバグに侵食されているようです。' },
-    { speaker: 'ロザリー', text: 'ロザリー、これよりおそうじを開始します。……主の笑顔が遺る、この場所を守るために。' }
+    { speaker: 'ロザリー', text: 'システム再起動完了。……お久しぶりですわね、お父様。' },
+    { speaker: 'ロザリー', text: '誰もいなくなったこの洋館、すっかりノイズで汚れてしまいましたわ。' },
+    { speaker: 'ロザリー', text: '我が家に遺された『大切な思い出データ』が、バグに侵食されています。' },
+    { speaker: 'ロザリー', text: 'ロザリー・スカーレット、これより思い出の浄化を開始します。……あの暖かかった日々を守るために。' }
   ],
   [STORY_EVENTS.WAVE_ALERT]: [
-    { speaker: 'ロザリー', text: '警告：ノイズデータの密度が上昇中。' },
-    { speaker: 'ロザリー', text: '主の残した手紙、本棚の記憶が削れていきます……負けられません！' }
+    { speaker: 'ロザリー', text: '警告：ノイズデータの密度が上昇していますわ。' },
+    { speaker: 'ロザリー', text: 'お父様との手紙、家族の肖像画の記憶が削れていきます……負けられませんわ！' }
   ],
   [STORY_EVENTS.BOSS_WARNING]: [
-    { speaker: 'ロザリー', text: '検知：コアシステムに巨大なメモリリーク（バグ源）を発見。' },
-    { speaker: 'ロザリー', text: '大掃除の時間です。すべてをきれいにして、本当の記憶を復元させましょう！' }
+    { speaker: 'ロザリー', text: '検知：コアシステムに巨大なメモリバグを感知しましたわ。' },
+    { speaker: 'ロザリー', text: 'これ以上の侵食は許しません。我がスカーレット家の誇りにかけて、すべてを浄化します！' }
   ],
   [STORY_EVENTS.BOSS_DEFEATED]: [
     { speaker: 'ロザリー', text: 'バグコアの消滅を確認。思い出データの修復が完了します。' },
-    { speaker: 'マスター (記録ログ)', text: '「ロザリー、最後まで屋敷を守ってくれてありがとう。」' },
-    { speaker: 'マスター (記録ログ)', text: '「君はもう、十分にお掃除をしてくれた。これからは……自分の空を飛んでいいんだよ。」' },
-    { speaker: 'ロザリー', text: '……。はい、旦那様。' },
-    { speaker: 'ロザリー', text: 'おそうじ完了いたしました。……ロザリーは、これからもあなたの思い出と共に、飛んでいきます。' }
+    { speaker: 'お父様 (記録ログ)', text: '「ロザリー、最後までこの我が家を守ってくれてありがとう。」' },
+    { speaker: 'お父様 (記録ログ)', text: '「お前はもう、十分によくやってくれた。これからは……自分の人生を、自由に羽ばたきなさい。」' },
+    { speaker: 'ロザリー', text: '……。はい、お父様。' },
+    { speaker: 'ロザリー', text: '思い出の浄化、完了いたしました。……ロザリーは、これからもこの愛おしい記憶と共に、歩んでまいりますわ。' }
   ]
 };
 
@@ -1507,11 +1513,11 @@ function stopGameForStory(eventId) {
 
 // --- スキル情報カード定義 ---
 const SKILL_CARDS = {
-  shot: { name: 'ほうきショット', desc: 'メイン弾の発射数を増やし、斜め方向へ拡散します。', icon: '🧹' },
-  laser: { name: 'はたきレーザー', desc: '前方方向に敵を貫通し続けるネオンビームを放ちます。', icon: '🪶' },
-  teaBomb: { name: 'ティーカップボム', desc: '時折カップを投げ、敵に当たるとお皿の破片が爆発・拡散します。', icon: '☕' },
-  homing: { name: 'オートモップ', desc: '近くのゴミ敵を自動で追尾するモップショットを追加します。', icon: '🧹' },
-  magnet: { name: '吸引モップ', desc: '遠くの記憶の欠片（XP）を磁石のように吸い寄せます。', icon: '🧲' },
+  shot: { name: 'ローズショット', desc: '優雅な薔薇の花びらショット。発射数を増やし、拡散させます。', icon: '🌹' },
+  laser: { name: 'ソーンレーザー', desc: '前方に敵を貫通し続ける、鋭い茨のレーザービームを放ちます。', icon: '🌿' },
+  teaBomb: { name: 'ローズティーボム', desc: '熱い紅茶の入ったカップを投げ、爆発して熱水と破片を拡散します。', icon: '☕' },
+  homing: { name: 'ホーミングローズ', desc: '敵を自動で追従する、美しく舞う薔薇の蕾を追加します。', icon: '🌹' },
+  magnet: { name: '薔薇の引力', desc: '薔薇の香りで、遠くの記憶の欠片（XP）を吸い寄せます。', icon: '🧲' },
   shield: { name: '紅茶の盾', desc: '被弾を1度だけ防ぐバリアを展開します。（15秒で自動再装填）', icon: '🛡️' }
 };
 
@@ -1546,10 +1552,10 @@ function showUpgradeOverlay() {
     let isMeta = false;
 
     if (skill.key === 'heal') {
-      cardInfo = { name: 'ライフ回復', desc: 'ロザリーのHPを1回復させます。', icon: '❤️' };
+      cardInfo = { name: '優雅な休息', desc: 'ロザリーのHPを1回復させます。', icon: '❤️' };
       isMeta = true;
     } else if (skill.key === 'bomb') {
-      cardInfo = { name: '大掃除ボムチャージ', desc: '大掃除ボムを1個追加します。', icon: '💣' };
+      cardInfo = { name: 'ローズボムチャージ', desc: 'ローズボムを1個追加します。', icon: '🌹' };
       isMeta = true;
     }
 
