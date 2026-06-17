@@ -1339,6 +1339,16 @@ let isWarningActive = false;
 let warningTimer = 0;
 let shakeAmount = 0;
 
+// --- Supabase ランキング設定 ---
+const SUPABASE_URL = 'https://neofsloblcneynwaqslx.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_EQZVMm1XnMzYxFupYOYMmA_lhucBoNR';
+const SUPABASE_TABLE = 'apfelrose_rankings';
+const SUPABASE_HEADERS = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': `Bearer ${SUPABASE_KEY}`,
+  'Content-Type': 'application/json'
+};
+
 // --- ストーリーイベント・テキストデータ ---
 const STORY_EVENTS = {
   INTRO: 'intro',
@@ -2011,7 +2021,7 @@ function endGame(isClear = false) {
   document.getElementById('res-graze').textContent = grazeCount;
 
   // 以前登録した名前があれば初期表示
-  const savedName = localStorage.getItem('maid_stg_player_name');
+  const savedName = localStorage.getItem('apfelrose_player_name');
   if (savedName) {
     document.getElementById('player-name').value = savedName;
   } else {
@@ -2027,18 +2037,19 @@ function loadRanking() {
   const rankingList = document.getElementById('ranking-list');
   rankingList.innerHTML = '<tr><td colspan="4" style="text-align:center;">読込中...</td></tr>';
 
-  // APIサーバーからのデータ取得を試みる (ENOENT 等のエラー時は LocalStorage にフォールバック)
-  fetch('/api/ranking')
+  const url = `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?select=name,score,comment&order=score.desc&limit=10`;
+
+  fetch(url, { headers: SUPABASE_HEADERS })
     .then(res => {
-      if (!res.ok) throw new Error('Network error');
+      if (!res.ok) throw new Error('Supabase error');
       return res.json();
     })
     .then(data => {
       renderRankingTable(data);
     })
     .catch(() => {
-      // サーバーが落ちている、またはNode環境でない場合はLocalStorageから読み込む
-      const localData = JSON.parse(localStorage.getItem('maid_stg_ranking') || '[]');
+      // サーバーエラー時はLocalStorageフォールバック
+      const localData = JSON.parse(localStorage.getItem('apfelrose_ranking') || '[]');
       renderRankingTable(localData);
     });
 }
@@ -2078,14 +2089,17 @@ function submitScore() {
   const comment = commentInput.value.trim();
 
   // 名前を次回のためにローカル保存
-  localStorage.setItem('maid_stg_player_name', name);
+  localStorage.setItem('apfelrose_player_name', name);
 
   const scoreData = { name, score, comment };
 
-  // サーバーへ送信
-  fetch('/api/ranking', {
+  // SupabaseへUPSERT（同名の場合高スコアで上書き）
+  fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      ...SUPABASE_HEADERS,
+      'Prefer': 'resolution=merge-duplicates'
+    },
     body: JSON.stringify(scoreData)
   })
   .then(res => {
@@ -2097,8 +2111,8 @@ function submitScore() {
   })
   .catch(() => {
     // オフライン/ローカル保存フォールバック
-    let localData = JSON.parse(localStorage.getItem('maid_stg_ranking') || '[]');
-    
+    let localData = JSON.parse(localStorage.getItem('apfelrose_ranking') || '[]');
+
     // 重複チェック（高スコア上書き）
     const existingIdx = localData.findIndex(r => r.name === name);
     if (existingIdx !== -1) {
@@ -2108,9 +2122,9 @@ function submitScore() {
     } else {
       localData.push({ name, score, comment, created_at: new Date().toISOString() });
     }
-    
+
     localData.sort((a, b) => b.score - a.score);
-    localStorage.setItem('maid_stg_ranking', JSON.stringify(localData.slice(0, 100)));
+    localStorage.setItem('apfelrose_ranking', JSON.stringify(localData.slice(0, 100)));
     showRankingScreen();
   });
 }

@@ -1,5 +1,15 @@
 # 🌹 アプフェルローゼ 〜追憶のメロディ〜 - 変更履歴 (CHANGELOG)
 
+### v1.0.5 (2026/06/18)
+- **機能追加**
+  - ランキングバックエンドを `server.js`（Node.js/Express + ローカルJSON）から **Supabase**（クラウドPostgreSQL）に移行。
+    - GitHub Pagesからサーバーなしで直接SupabaseのREST APIにアクセスするよう変更。
+    - 同名プレイヤーは高スコアで上書き（UPSERT）されるようDB側で管理。
+    - Supabase接続失敗時は従来通りLocalStorageへフォールバック。
+  - LocalStorageのキーを `maid_stg_ranking` / `maid_stg_player_name` から `apfelrose_ranking` / `apfelrose_player_name` に変更（他ゲームとの混在防止）。
+
+---
+
 ### v1.0.4 (2026/06/18)
 - **バグ修正**
   - 会話ログ（ストーリーダイアログ）でタイピング中にクリック/タップすると次の行へ飛んでしまい、最終行で詰まるバグを修正。
