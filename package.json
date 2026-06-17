@@ -1,0 +1,22 @@
+{
+  "name": "maid-danmaku-shooting",
+  "version": "1.0.0",
+  "description": "A vertical-scrolling roguelite danmaku shooting game with a maid protagonist and melancholic synth BGM.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "keywords": [
+    "shooting",
+    "game",
+    "danmaku",
+    "roguelite",
+    "web-audio-api"
+  ],
+  "author": "Antigravity Pair",
+  "license": "MIT"
+}
