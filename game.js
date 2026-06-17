@@ -459,26 +459,24 @@ class Player {
     }
   }
 
-  update(dt, keys, targetX, targetY) {
+  update(dt, keys) {
     // 1. 移動処理
     let dx = 0;
     let dy = 0;
 
-    if (targetX !== null && targetY !== null) {
-      // マウス / スワイプによる相対・絶対追従
-      const targetDistX = targetX - this.x;
-      const targetDistY = targetY - this.y;
-      const dist = Math.hypot(targetDistX, targetDistY);
+    if (joystick.active) {
+      // ジョイスティック移動
+      const jdx = joystick.currentX - joystick.startX;
+      const jdy = joystick.currentY - joystick.startY;
+      const dist = Math.hypot(jdx, jdy);
       
       if (dist > 2) {
-        const moveStep = this.speed * dt;
-        if (dist <= moveStep) {
-          this.x = targetX;
-          this.y = targetY;
-        } else {
-          this.x += (targetDistX / dist) * moveStep;
-          this.y += (targetDistY / dist) * moveStep;
-        }
+        const speedMultiplier = Math.min(1, dist / joystick.maxRadius);
+        dx = (jdx / dist) * speedMultiplier;
+        dy = (jdy / dist) * speedMultiplier;
+        
+        this.x += dx * this.speed * dt;
+        this.y += dy * this.speed * dt;
       }
     } else {
       // キーボード移動
@@ -1070,7 +1068,7 @@ class Enemy {
         
         // ボス撃破後のストーリーへ
         setTimeout(() => {
-          startStory(STORY_EVENTS.BOSS_DEFEATED);
+          stopGameForStory(STORY_EVENTS.BOSS_DEFEATED);
         }, 1500);
       } else {
         // 雑魚は確率でXP
@@ -1322,9 +1320,19 @@ let waveCount = 1;
 let timeCount = 0;
 
 let activeKeys = {};
-let touchX = null;
-let touchY = null;
 let isMobile = false;
+
+// ジョイスティック管理
+let joystick = {
+  active: false,
+  startX: 0,
+  startY: 0,
+  currentX: 0,
+  currentY: 0,
+  maxRadius: 60,
+  touchId: null,
+  isMouse: false
+};
 
 // 警告・揺れ管理
 let isWarningActive = false;
@@ -1656,6 +1664,7 @@ function updateHud() {
 
 // --- ストーリーテキストタイピング風表示 ---
 function startStory(eventId) {
+  gameState = STATE.STORY; // フェイルセーフ：状態をストーリー進行中に設定
   currentStoryList = storyScripts[eventId] || [];
   currentStoryIndex = 0;
   
@@ -1841,7 +1850,7 @@ function gameLoop(time) {
 
     // 更新 (ゲーム進行中のみ)
     if (gameState === STATE.PLAYING) {
-      player.update(dt, activeKeys, touchX, touchY);
+      player.update(dt, activeKeys);
 
       bullets.forEach(b => b.update(dt));
       enemyBullets.forEach(eb => eb.update(eb.grazed ? dt * 0.9 : dt)); // かすった弾は少し遅延する面白ギミック
@@ -1871,6 +1880,11 @@ function gameLoop(time) {
     particles.forEach(p => p.draw());
     player.draw();
 
+    // ジョイスティックの描画
+    if (joystick.active) {
+      drawJoystick();
+    }
+
     // WARNING警告の表示
     if (isWarningActive) {
       drawWarningBanner();
@@ -1889,6 +1903,45 @@ function gameLoop(time) {
   ctx.restore(); // 画面揺れのリストア
 
   requestAnimationFrame(gameLoop);
+}
+
+function drawJoystick() {
+  ctx.save();
+
+  // 1. 外側の円（ベース）
+  ctx.beginPath();
+  ctx.arc(joystick.startX, joystick.startY, joystick.maxRadius, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(7, 10, 25, 0.45)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(5, 249, 226, 0.55)';
+  ctx.lineWidth = 3;
+  ctx.shadowColor = varColor('--neon-cyan');
+  ctx.shadowBlur = 8;
+  ctx.stroke();
+
+  // 十字線ガイド
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = 'rgba(5, 249, 226, 0.15)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(joystick.startX - joystick.maxRadius, joystick.startY);
+  ctx.lineTo(joystick.startX + joystick.maxRadius, joystick.startY);
+  ctx.moveTo(joystick.startX, joystick.startY - joystick.maxRadius);
+  ctx.lineTo(joystick.startX, joystick.startY + joystick.maxRadius);
+  ctx.stroke();
+
+  // 2. 内側の円（ノブ）
+  ctx.beginPath();
+  ctx.arc(joystick.currentX, joystick.currentY, 16, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255, 42, 133, 0.7)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 42, 133, 0.95)';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = varColor('--neon-pink');
+  ctx.shadowBlur = 10;
+  ctx.stroke();
+
+  ctx.restore();
 }
 
 function drawWarningBanner() {
@@ -2111,24 +2164,47 @@ window.addEventListener('keyup', e => {
   activeKeys[e.code] = false;
 });
 
-// マウス移動・ドラッグ操作
-canvas.addEventListener('mousemove', e => {
+// マウスドラッグ操作（バーチャルジョイスティック）
+canvas.addEventListener('mousedown', e => {
   if (gameState !== STATE.PLAYING) return;
   const rect = canvas.getBoundingClientRect();
-  touchX = (e.clientX - rect.left) * (WIDTH / rect.width);
-  touchY = (e.clientY - rect.top) * (HEIGHT / rect.height);
+  const canvasX = (e.clientX - rect.left) * (WIDTH / rect.width);
+  const canvasY = (e.clientY - rect.top) * (HEIGHT / rect.height);
+
+  joystick.active = true;
+  joystick.isMouse = true;
+  joystick.startX = canvasX;
+  joystick.startY = canvasY;
+  joystick.currentX = canvasX;
+  joystick.currentY = canvasY;
+  audio.init();
 });
 
-canvas.addEventListener('mouseleave', () => {
-  touchX = null;
-  touchY = null;
-});
+canvas.addEventListener('mousemove', e => {
+  if (!joystick.active || !joystick.isMouse) return;
+  const rect = canvas.getBoundingClientRect();
+  const canvasX = (e.clientX - rect.left) * (WIDTH / rect.width);
+  const canvasY = (e.clientY - rect.top) * (HEIGHT / rect.height);
 
-canvas.addEventListener('click', () => {
-  if (gameState === STATE.PLAYING) {
-    player.useBomb();
+  const dx = canvasX - joystick.startX;
+  const dy = canvasY - joystick.startY;
+  const dist = Math.hypot(dx, dy);
+
+  if (dist <= joystick.maxRadius) {
+    joystick.currentX = canvasX;
+    joystick.currentY = canvasY;
+  } else {
+    joystick.currentX = joystick.startX + (dx / dist) * joystick.maxRadius;
+    joystick.currentY = joystick.startY + (dy / dist) * joystick.maxRadius;
   }
 });
+
+const endMouseJoystick = () => {
+  if (joystick.active && joystick.isMouse) {
+    joystick.active = false;
+  }
+};
+window.addEventListener('mouseup', endMouseJoystick);
 
 // ストーリー送りはストーリー画面全体でタップ・クリックを受け付ける
 const storyOverlay = document.getElementById('story-overlay');
@@ -2145,29 +2221,71 @@ storyOverlay.addEventListener('touchstart', e => {
   }
 }, { passive: false });
 
-// モバイルタッチ操作
+// モバイルタッチ操作（バーチャルジョイスティック）
 canvas.addEventListener('touchstart', e => {
   if (gameState !== STATE.PLAYING) return;
   e.preventDefault();
   const rect = canvas.getBoundingClientRect();
   const touch = e.touches[0];
-  touchX = (touch.clientX - rect.left) * (WIDTH / rect.width);
-  touchY = (touch.clientY - rect.top) * (HEIGHT / rect.height);
+  const canvasX = (touch.clientX - rect.left) * (WIDTH / rect.width);
+  const canvasY = (touch.clientY - rect.top) * (HEIGHT / rect.height);
+
+  joystick.active = true;
+  joystick.isMouse = false;
+  joystick.touchId = touch.identifier;
+  joystick.startX = canvasX;
+  joystick.startY = canvasY;
+  joystick.currentX = canvasX;
+  joystick.currentY = canvasY;
+  audio.init();
 }, { passive: false });
 
 canvas.addEventListener('touchmove', e => {
-  if (gameState !== STATE.PLAYING) return;
+  if (!joystick.active || joystick.isMouse) return;
   e.preventDefault();
   const rect = canvas.getBoundingClientRect();
-  const touch = e.touches[0];
-  touchX = (touch.clientX - rect.left) * (WIDTH / rect.width);
-  touchY = (touch.clientY - rect.top) * (HEIGHT / rect.height);
+  
+  let touch = null;
+  for (let i = 0; i < e.touches.length; i++) {
+    if (e.touches[i].identifier === joystick.touchId) {
+      touch = e.touches[i];
+      break;
+    }
+  }
+  if (!touch) return;
+
+  const canvasX = (touch.clientX - rect.left) * (WIDTH / rect.width);
+  const canvasY = (touch.clientY - rect.top) * (HEIGHT / rect.height);
+
+  const dx = canvasX - joystick.startX;
+  const dy = canvasY - joystick.startY;
+  const dist = Math.hypot(dx, dy);
+
+  if (dist <= joystick.maxRadius) {
+    joystick.currentX = canvasX;
+    joystick.currentY = canvasY;
+  } else {
+    joystick.currentX = joystick.startX + (dx / dist) * joystick.maxRadius;
+    joystick.currentY = joystick.startY + (dy / dist) * joystick.maxRadius;
+  }
 }, { passive: false });
 
-canvas.addEventListener('touchend', () => {
-  touchX = null;
-  touchY = null;
-});
+const endTouchJoystick = (e) => {
+  if (!joystick.active || joystick.isMouse) return;
+  let ended = false;
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    if (e.changedTouches[i].identifier === joystick.touchId) {
+      ended = true;
+      break;
+    }
+  }
+  if (ended) {
+    joystick.active = false;
+    joystick.touchId = null;
+  }
+};
+canvas.addEventListener('touchend', endTouchJoystick);
+canvas.addEventListener('touchcancel', endTouchJoystick);
 
 // モバイルボムボタン
 const mobileBombBtn = document.getElementById('mobile-bomb-btn');
