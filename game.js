@@ -1584,7 +1584,20 @@ function showUpgradeOverlay() {
       </div>
     `;
 
+    let touched = false;
+    card.addEventListener('touchstart', (e) => {
+      touched = true;
+      e.preventDefault();
+      applyUpgrade(skill.key);
+      overlay.classList.add('hidden');
+      gameState = STATE.PLAYING;
+    }, { passive: false });
+
     card.addEventListener('click', () => {
+      if (touched) {
+        touched = false;
+        return;
+      }
       applyUpgrade(skill.key);
       overlay.classList.add('hidden');
       gameState = STATE.PLAYING;
@@ -2173,45 +2186,82 @@ mobileBombBtn.addEventListener('touchstart', (e) => {
   }
 }, { passive: false });
 
+// UI タップイベント登録用ヘルパー（スマホでの無反応・二重実行防止用）
+function addTapListener(id, callback) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  let touched = false;
+  el.addEventListener('touchstart', (e) => {
+    touched = true;
+    e.preventDefault();
+    callback(e);
+  }, { passive: false });
+  el.addEventListener('click', (e) => {
+    if (touched) {
+      touched = false;
+      return;
+    }
+    callback(e);
+  });
+}
+
 // UI ボタンのバインド
-document.getElementById('btn-start').addEventListener('click', () => {
+addTapListener('btn-start', () => {
   audio.init();
   startGame();
 });
 
-document.getElementById('btn-show-ranking').addEventListener('click', () => {
+addTapListener('btn-show-ranking', () => {
   document.getElementById('menu-overlay').classList.add('hidden');
   document.getElementById('ranking-overlay').classList.remove('hidden');
   loadRanking();
 });
 
-document.getElementById('btn-show-how').addEventListener('click', () => {
+addTapListener('btn-show-how', () => {
   document.getElementById('menu-overlay').classList.add('hidden');
   document.getElementById('how-overlay').classList.remove('hidden');
 });
 
-document.getElementById('btn-close-how').addEventListener('click', () => {
+addTapListener('btn-close-how', () => {
   document.getElementById('how-overlay').classList.add('hidden');
   document.getElementById('menu-overlay').classList.remove('hidden');
 });
 
-document.getElementById('btn-close-ranking').addEventListener('click', () => {
+addTapListener('btn-close-ranking', () => {
   document.getElementById('ranking-overlay').classList.add('hidden');
   document.getElementById('menu-overlay').classList.remove('hidden');
 });
 
-document.getElementById('btn-retry').addEventListener('click', () => {
+addTapListener('btn-retry', () => {
   startGame();
 });
 
-document.getElementById('btn-return-menu').addEventListener('click', () => {
+addTapListener('btn-return-menu', () => {
   document.getElementById('game-over-overlay').classList.add('hidden');
   document.getElementById('menu-overlay').classList.remove('hidden');
   audio.stopBgm();
   audio.startBgm('normal');
 });
 
-document.getElementById('btn-submit-score').addEventListener('click', submitScore);
+addTapListener('btn-submit-score', submitScore);
+
+// バージョン管理情報の動的ロード
+function loadVersionInfo() {
+  fetch(`version.json?t=${Date.now()}`)
+    .then(response => {
+      if (!response.ok) throw new Error('Failed to load version.json');
+      return response.json();
+    })
+    .then(data => {
+      const versionEl = document.getElementById('footer-version');
+      const dateEl = document.getElementById('footer-date');
+      if (versionEl) versionEl.textContent = data.version;
+      if (dateEl) dateEl.textContent = `最終更新: ${data.lastUpdated}`;
+    })
+    .catch(error => {
+      console.warn('Could not load version info:', error);
+    });
+}
 
 // 音声トグル
 document.getElementById('menu-audio-toggle').addEventListener('change', (e) => {
@@ -2251,5 +2301,6 @@ window.addEventListener('resize', resizeGame);
 resizeGame();
 
 // --- 起動 ---
+loadVersionInfo();
 requestAnimationFrame(gameLoop);
 audio.startBgm('normal'); // メニューでもBGM開始するようにする (操作で有効化される)
