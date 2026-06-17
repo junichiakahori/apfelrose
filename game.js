@@ -2114,12 +2114,34 @@ canvas.addEventListener('mouseleave', () => {
 canvas.addEventListener('click', () => {
   if (gameState === STATE.PLAYING) {
     player.useBomb();
-  } else if (gameState === STATE.STORY) {
+  }
+});
+
+// ストーリー送りはストーリー画面全体でタップ・クリックを受け付ける
+const storyOverlay = document.getElementById('story-overlay');
+storyOverlay.addEventListener('click', () => {
+  if (gameState === STATE.STORY) {
     nextStoryLine();
   }
 });
 
+storyOverlay.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (gameState === STATE.STORY) {
+    nextStoryLine();
+  }
+}, { passive: false });
+
 // モバイルタッチ操作
+canvas.addEventListener('touchstart', e => {
+  if (gameState !== STATE.PLAYING) return;
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches[0];
+  touchX = (touch.clientX - rect.left) * (WIDTH / rect.width);
+  touchY = (touch.clientY - rect.top) * (HEIGHT / rect.height);
+}, { passive: false });
+
 canvas.addEventListener('touchmove', e => {
   if (gameState !== STATE.PLAYING) return;
   e.preventDefault();
@@ -2142,6 +2164,14 @@ mobileBombBtn.addEventListener('click', (e) => {
     player.useBomb();
   }
 });
+
+mobileBombBtn.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  if (gameState === STATE.PLAYING) {
+    player.useBomb();
+  }
+}, { passive: false });
 
 // UI ボタンのバインド
 document.getElementById('btn-start').addEventListener('click', () => {
