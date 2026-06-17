@@ -1663,7 +1663,14 @@ function startStory(eventId) {
 }
 
 function nextStoryLine() {
-  if (typingTimer) clearInterval(typingTimer);
+  // タイピング中にクリックされた場合 → 全文を即座に表示して止まる（次行には進まない）
+  if (typingTimer) {
+    clearInterval(typingTimer);
+    typingTimer = null;
+    document.getElementById('story-text').textContent = fullTextTarget;
+    displayedText = fullTextTarget;
+    return; // ここで止まり、次のクリックで次行へ進む
+  }
 
   if (currentStoryIndex >= currentStoryList.length) {
     // 全ダイアログ終了、ゲームへ復帰
@@ -1681,8 +1688,8 @@ function nextStoryLine() {
   const currentLine = currentStoryList[currentStoryIndex];
   document.getElementById('story-speaker').textContent = currentLine.speaker;
 
-  // 旦那様のセリフなら青っぽいネオン、ロザリーならシアン
-  if (currentLine.speaker.includes('マスター')) {
+  // お父様のセリフならピンク、ロザリーならシアン
+  if (currentLine.speaker.includes('お父様') || currentLine.speaker.includes('マスター')) {
     document.getElementById('story-speaker').style.color = varColor('--neon-pink');
     document.getElementById('story-speaker').style.textShadow = `0 0 8px ${varColor('--neon-pink')}`;
   } else {
