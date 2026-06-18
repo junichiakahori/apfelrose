@@ -322,6 +322,7 @@ canvas {
   font-weight: 800;
   background: linear-gradient(135deg, #fff 30%, var(--neon-cyan) 60%, var(--neon-pink) 100%);
   -webkit-background-clip: text;
+  background-clip: text; /* 標準プロパティ（Firefox等標準準拠ブラウザ対応） */
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 0 8px rgba(5, 249, 226, 0.4));
   margin-bottom: 5px;
@@ -551,6 +552,7 @@ input[type="checkbox"]:checked + .switch-label {
   font-size: 26px;
   background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
   -webkit-background-clip: text;
+  background-clip: text; /* 標準プロパティ（Firefox等標準準拠ブラウザ対応） */
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 0 10px rgba(5, 249, 226, 0.4));
   margin-bottom: 6px;
@@ -794,7 +796,7 @@ tr:nth-child(even) {
 /* Mobile Bomb Button */
 #mobile-bomb-btn {
   position: absolute;
-  bottom: 40px;
+  bottom: 110px; /* HUDのボム残数表示（bottom:~80px）と被らないよう上にずらす */
   right: 20px;
   width: 65px;
   height: 65px;
