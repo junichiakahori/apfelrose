@@ -28,7 +28,10 @@ body {
   color: var(--text-primary);
   font-family: 'Outfit', sans-serif;
   overflow: hidden;
-  height: 100vh;
+  /* 100dvh: スマホChromeのアドレスバー/ナビゲーションバーを除いた実際の表示高さ */
+  height: 100dvh;
+  height: 100vh; /* dvh非対応ブラウザ向けフォールバック */
+  height: 100dvh; /* 対応ブラウザで上書き */
   display: flex;
   align-items: center;
   justify-content: center;

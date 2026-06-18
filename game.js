@@ -2396,35 +2396,58 @@ document.getElementById('menu-audio-toggle').addEventListener('change', (e) => {
 });
 
 // レスポンス対応スケーリング調整
+// visualViewport API: スマホChromeのアドレスバー・ナビゲーションバーを除いた
+// 実際の表示領域を正確に取得する
 function resizeGame() {
   const wrapper = document.getElementById('game-wrapper');
-  const windowWidth = window.innerWidth;
-  const windowHeight = window.innerHeight;
-  
-  const targetRatio = 450 / 800;
-  const currentRatio = windowWidth / windowHeight;
 
-  if (windowWidth < 480 || windowHeight < 820) {
-    // 画面サイズが小さい場合はフィットさせる
-    isMobile = true;
+  // visualViewport: スマホブラウザのUI（アドレスバー等）を除いた正確な表示領域
+  // 非対応の場合は innerWidth/innerHeight にフォールバック
+  const vw = (window.visualViewport ? window.visualViewport.width  : window.innerWidth);
+  const vh = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+
+  const GAME_W = 450;
+  const GAME_H = 800;
+
+  // アスペクト比を維持しながら表示領域に収まる最大スケールを計算
+  const scale = Math.min(vw / GAME_W, vh / GAME_H);
+
+  // モバイル判定: 表示幅480px未満 または スケール1未満（画面が小さい）
+  const mobileMode = vw < 480 || scale < 1;
+  isMobile = mobileMode;
+
+  if (mobileMode) {
     mobileBombBtn.classList.remove('hidden');
-    
-    if (currentRatio < targetRatio) {
-      wrapper.style.width = '100vw';
-      wrapper.style.height = `${100 / targetRatio}vw`;
-    } else {
-      wrapper.style.height = '100vh';
-      wrapper.style.width = `${100 * targetRatio}vh`;
-    }
   } else {
-    isMobile = false;
     mobileBombBtn.classList.add('hidden');
-    wrapper.style.width = '450px';
+  }
+
+  if (scale < 1) {
+    // 画面に収まるようscaleで縮小（transform-originは中央）
+    wrapper.style.width  = `${GAME_W}px`;
+    wrapper.style.height = `${GAME_H}px`;
+    wrapper.style.transform = `scale(${scale})`;
+    wrapper.style.transformOrigin = 'center center';
+    // 縮小後の実寸でbodyのflexが中央揃えできるようmarginで補正
+    wrapper.style.marginTop    = `${(vh - GAME_H * scale) / 2}px`;
+    wrapper.style.marginBottom = `${(vh - GAME_H * scale) / 2}px`;
+  } else {
+    // PC等: 固定サイズ
+    wrapper.style.width  = '450px';
     wrapper.style.height = '800px';
+    wrapper.style.transform = 'none';
+    wrapper.style.marginTop    = '';
+    wrapper.style.marginBottom = '';
   }
 }
 
 window.addEventListener('resize', resizeGame);
+
+// visualViewport resize: スマホでスクロール・アドレスバー表示/非表示の切替時に発火
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', resizeGame);
+}
+
 resizeGame();
 
 // --- 起動 ---
