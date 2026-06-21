@@ -79,7 +79,7 @@ class SoundSynth {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     this.ctx = new AudioContextClass();
     this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.setValueAtTime(0.04, this.ctx.currentTime); // 小さめのマスター音量
+    this.masterGain.gain.setValueAtTime(0.12, this.ctx.currentTime); // マスター音量を0.04から0.12に引き上げ（約3倍）
     this.masterGain.connect(this.ctx.destination);
 
     // BGM用ゲイン
