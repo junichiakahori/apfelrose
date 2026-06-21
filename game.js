@@ -2584,4 +2584,17 @@ resizeGame();
 // --- 起動 ---
 loadVersionInfo();
 requestAnimationFrame(gameLoop);
-audio.startBgm('normal'); // メニューでもBGM開始するようにする (操作で有効化される)
+
+// 初回ユーザージェスチャー（画面クリック・タップ）でオーディオを安全に初期化・再生開始
+function enableAudioOnFirstGesture() {
+  const startAudio = () => {
+    audio.init();
+    audio.startBgm('normal');
+    // 1回実行したらイベントリスナーを解除
+    window.removeEventListener('click', startAudio);
+    window.removeEventListener('touchstart', startAudio);
+  };
+  window.addEventListener('click', startAudio);
+  window.addEventListener('touchstart', startAudio);
+}
+enableAudioOnFirstGesture();
