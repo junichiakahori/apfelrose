@@ -1719,6 +1719,7 @@ function applyUpgrade(key) {
     }
   }
   updateHud();
+  saveGame(); // 自動セーブ
 }
 
 // --- HUD表示更新 ---
@@ -1792,6 +1793,7 @@ function nextStoryLine() {
       endGame(true);
     } else {
       gameState = STATE.PLAYING;
+      saveGame(); // ウェーブ開始時の自動セーブ
     }
     return;
   }
@@ -2081,6 +2083,8 @@ function startGame() {
   grazeCount = 0;
   timeCount = 0;
   
+  deleteSaveData(); // 新規ゲーム開始時は古いセーブデータを消去
+  
   // スポナーの複製
   activeSpawners = waveSpawners.map(s => ({ ...s, processed: false }));
 
@@ -2098,6 +2102,7 @@ function startGame() {
 function endGame(isClear = false) {
   gameState = STATE.GAMEOVER;
   audio.stopBgm();
+  deleteSaveData(); // ゲームオーバー（またはクリア）時にセーブデータを消去
 
   document.getElementById('hud-overlay').classList.add('hidden');
   document.getElementById('boss-hud').classList.add('hidden');
@@ -2548,6 +2553,7 @@ function pauseGame() {
   document.getElementById('pause-bgm-toggle').checked = audio.isBgmEnabled;
   document.getElementById('pause-se-toggle').checked = audio.isSeEnabled;
   document.getElementById('pause-overlay').classList.remove('hidden');
+  saveGame(); // ポーズ時の自動セーブ
 }
 
 function resumeGame() {
@@ -2628,3 +2634,146 @@ function enableAudioOnFirstGesture() {
   window.addEventListener('touchstart', startAudio);
 }
 enableAudioOnFirstGesture();
+
+// --- セーブ ＆ ロード機能 ---
+
+// ゲーム状態を保存
+function saveGame() {
+  const saveData = {
+    score: score,
+    grazeCount: grazeCount,
+    waveCount: waveCount,
+    timeCount: timeCount,
+    player: {
+      hp: player.hp,
+      maxHp: player.maxHp,
+      bombs: player.bombs,
+      maxBombs: player.maxBombs,
+      level: player.level,
+      xp: player.xp,
+      xpNeeded: player.xpNeeded,
+      grazeCount: player.grazeCount,
+      skills: { ...player.skills }
+    }
+  };
+  localStorage.setItem('apfelrose_save_data', JSON.stringify(saveData));
+  console.log('Game progress auto-saved.');
+  checkSaveDataDOM();
+}
+
+// セーブデータを消去
+function deleteSaveData() {
+  localStorage.removeItem('apfelrose_save_data');
+  console.log('Save data deleted.');
+  checkSaveDataDOM();
+}
+
+// セーブデータがあるかチェックしてUI（ボタン）の状態を変更
+function checkSaveDataDOM() {
+  const save = localStorage.getItem('apfelrose_save_data');
+  const btnContinue = document.getElementById('btn-continue');
+  const btnStart = document.getElementById('btn-start');
+  if (!btnContinue || !btnStart) return;
+
+  if (save) {
+    btnContinue.classList.remove('hidden');
+    btnStart.classList.remove('btn-primary');
+    btnStart.classList.add('btn-secondary');
+  } else {
+    btnContinue.classList.add('hidden');
+    btnStart.classList.remove('btn-secondary');
+    btnStart.classList.add('btn-primary');
+  }
+}
+
+// ゲーム状態をロードして復元
+function loadGame() {
+  const saveJson = localStorage.getItem('apfelrose_save_data');
+  if (!saveJson) return false;
+
+  try {
+    const data = JSON.parse(saveJson);
+
+    // グローバル変数の復元
+    score = data.score;
+    grazeCount = data.grazeCount;
+    waveCount = data.waveCount;
+    timeCount = data.timeCount;
+
+    // プレイヤープロパティの復元
+    player.hp = data.player.hp;
+    player.maxHp = data.player.maxHp;
+    player.bombs = data.player.bombs;
+    player.maxBombs = data.player.maxBombs;
+    player.level = data.player.level;
+    player.xp = data.player.xp;
+    player.xpNeeded = data.player.xpNeeded;
+    player.grazeCount = data.player.grazeCount;
+
+    // スキルの復元
+    for (let key in data.player.skills) {
+      player.skills[key] = data.player.skills[key];
+    }
+
+    // オブジェクトのクリーンアップ
+    enemies = [];
+    bullets = [];
+    enemyBullets = [];
+    xpItems = [];
+    particles = [];
+
+    // スポナーの復元（現在のtimeCount以降のイベントのみ登録）
+    activeSpawners = waveSpawners.map(s => ({
+      ...s,
+      processed: s.time <= timeCount
+    })).filter(s => !s.processed);
+
+    // HUD表示の同期
+    updateHud();
+
+    // オーバーレイの切り替え
+    document.getElementById('menu-overlay').classList.add('hidden');
+    document.getElementById('hud-overlay').classList.remove('hidden');
+    document.getElementById('boss-hud').classList.add('hidden');
+
+    // BGMの再開
+    audio.stopBgm();
+    if (timeCount >= 50) {
+      audio.startBgm('boss');
+    } else {
+      audio.startBgm('normal');
+    }
+
+    // プレイ状態へ移行
+    gameState = STATE.PLAYING;
+    lastTime = 0; // dtの跳ね上がりを防ぐ
+
+    console.log('Game progress loaded and resumed.');
+    return true;
+  } catch (e) {
+    console.error('Failed to load save data:', e);
+    return false;
+  }
+}
+
+// CONTINUEボタンとSAVE & QUITボタンのタップリスナー登録
+addTapListener('btn-continue', () => {
+  audio.init();
+  loadGame();
+});
+
+addTapListener('btn-save-quit', () => {
+  saveGame();
+  audio.stopBgm();
+  audio.startBgm('normal'); // タイトル画面BGM
+  
+  // ポーズ画面とHUDを非表示にし、タイトル画面を表示
+  document.getElementById('pause-overlay').classList.add('hidden');
+  document.getElementById('hud-overlay').classList.add('hidden');
+  document.getElementById('menu-overlay').classList.remove('hidden');
+  
+  gameState = STATE.MENU;
+});
+
+// 起動時にセーブデータ確認
+checkSaveDataDOM();

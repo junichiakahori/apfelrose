@@ -115,9 +115,13 @@
           </div>
 
           <div class="menu-buttons">
+            <button id="btn-continue" class="btn btn-primary hidden">
+              <span class="btn-glow"></span>
+              <span class="btn-text">続きから始める (CONTINUE)</span>
+            </button>
             <button id="btn-start" class="btn btn-primary">
               <span class="btn-glow"></span>
-              <span class="btn-text">記憶の旅を始める (START)</span>
+              <span class="btn-text">最初から始める (START)</span>
             </button>
             <button id="btn-show-ranking" class="btn btn-secondary">ランキング閲覧 (RANKING)</button>
             <button id="btn-show-how" class="btn btn-secondary">遊び方説明 (HOW TO PLAY)</button>
@@ -197,10 +201,15 @@
               </label>
             </div>
           </div>
-          <button id="btn-resume" class="btn btn-primary" style="margin-top: 20px;">
-            <span class="btn-glow"></span>
-            <span class="btn-text">ゲームに戻る (RESUME)</span>
-          </button>
+          <div class="pause-buttons" style="display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 20px;">
+            <button id="btn-resume" class="btn btn-primary" style="margin-top: 0;">
+              <span class="btn-glow"></span>
+              <span class="btn-text">ゲームに戻る (RESUME)</span>
+            </button>
+            <button id="btn-save-quit" class="btn btn-secondary">
+              <span class="btn-text">セーブしてタイトルに戻る (SAVE & QUIT)</span>
+            </button>
+          </div>
         </div>
       </div>
 
