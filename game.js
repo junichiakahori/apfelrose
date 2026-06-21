@@ -5,6 +5,7 @@
 
 // --- ゲーム状態定義 ---
 const STATE = {
+  TITLE: 'title',
   MENU: 'menu',
   STORY: 'story',
   PLAYING: 'playing',
@@ -13,7 +14,7 @@ const STATE = {
   PAUSED: 'paused'
 };
 
-let gameState = STATE.MENU;
+let gameState = STATE.TITLE;
 
 // --- キャンバス設定 ---
 const canvas = document.getElementById('game-canvas');
@@ -2627,6 +2628,9 @@ function initTitleScreen() {
   const menuOverlay  = document.getElementById('menu-overlay');
 
   const onTitleClick = () => {
+    titleOverlay.removeEventListener('click', onTitleClick);
+    titleOverlay.removeEventListener('touchstart', onTitleClick);
+
     // オーディオ初期化 & メニューBGM再生
     audio.init();
     audio.startBgm('menu');
@@ -2634,14 +2638,12 @@ function initTitleScreen() {
     // タイトル画面をフェードアウト
     titleOverlay.classList.add('fade-out');
 
-    // フェードアウト完了後にメニューを表示
-    titleOverlay.addEventListener('transitionend', () => {
+    // CSSのtransitionが完了したら（0.8s後）メニューを表示
+    setTimeout(() => {
       titleOverlay.classList.add('hidden');
       menuOverlay.classList.remove('hidden');
-    }, { once: true });
-
-    titleOverlay.removeEventListener('click', onTitleClick);
-    titleOverlay.removeEventListener('touchstart', onTitleClick);
+      gameState = STATE.MENU;
+    }, 800);
   };
 
   titleOverlay.addEventListener('click', onTitleClick);
