@@ -1,7 +1,7 @@
 ## 🔁 永続タスク（毎回の変更後に必ず実行）
-- [ ] `version.json` のバージョン番号と `lastUpdated` を更新する
-- [ ] `CHANGELOG.md` に変更内容を追記する
-- [ ] `git add` → `git commit` → `git push` を実行する
+- [x] `version.json` のバージョン番号と `lastUpdated` を更新する
+- [x] `CHANGELOG.md` に変更内容を追記する
+- [x] `git add` → `git commit` → `git push` を実行する
 
 ---
 
