@@ -38,6 +38,10 @@ class SoundSynth {
     this.tempo = 120; // BPM
     this.bgmType = 'normal'; // 'normal', 'boss', 'ending', 'menu'
     
+    // 外部BGM用キャッシュとソース
+    this.bgmBuffers = {};
+    this.bgmSource = null;
+
     // ON/OFF状態の保持
     this.isBgmEnabled = true;
     this.isSeEnabled = true;
@@ -91,6 +95,27 @@ class SoundSynth {
     this.seGain = this.ctx.createGain();
     this.seGain.gain.setValueAtTime(this.isSeEnabled ? 1.0 : 0.0, this.ctx.currentTime);
     this.seGain.connect(this.masterGain);
+
+    // BGMファイルのロード開始
+    this.loadBgm('menu', 'audio/bgm_menu.mp3');
+    this.loadBgm('normal', 'audio/bgm_normal.mp3');
+    this.loadBgm('boss', 'audio/bgm_boss.mp3');
+    this.loadBgm('ending', 'audio/bgm_ending.mp3');
+  }
+
+  // 外部BGMファイルの非同期ロード・デコード
+  async loadBgm(key, url) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const arrayBuffer = await response.arrayBuffer();
+      // デコード処理（ブラウザ環境のAudioContextで動作）
+      const audioBuffer = await this.ctx.decodeAudioData(arrayBuffer);
+      this.bgmBuffers[key] = audioBuffer;
+      console.log(`Loaded BGM: ${key} from ${url}`);
+    } catch (e) {
+      console.warn(`Could not load BGM [${key}] from ${url}:`, e.message);
+    }
   }
 
   setBgmVolume(enabled) {
@@ -112,15 +137,29 @@ class SoundSynth {
       this.ctx.resume();
     }
     
-    this.bgmType = type;
-    if (this.isPlayingBgm) {
-      // 既に再生中の場合はタイプのみ変更
+    if (this.bgmType === type && this.isPlayingBgm) {
+      // 既に同じタイプのBGMが再生中の場合は何もしない
       return;
     }
     
+    this.stopBgm(); // 現在再生中のBGM（シーケンサー含む）を一度停止
+    this.bgmType = type;
     this.isPlayingBgm = true;
-    this.currentStep = 0;
-    this.runSequencer();
+    
+    // 外部ファイルがロード済みの場合は、ファイルを再生
+    if (this.bgmBuffers[type]) {
+      this.bgmSource = this.ctx.createBufferSource();
+      this.bgmSource.buffer = this.bgmBuffers[type];
+      this.bgmSource.loop = true;
+      this.bgmSource.connect(this.bgmGain);
+      this.bgmSource.start(0);
+      console.log(`Playing external BGM: ${type}`);
+    } else {
+      // ロードされていない場合は、従来のピコピコ自動合成シーケンサーを走らせる（フォールバック）
+      this.currentStep = 0;
+      this.runSequencer();
+      console.log(`Playing synthesized BGM (fallback): ${type}`);
+    }
   }
 
   stopBgm() {
@@ -128,6 +167,14 @@ class SoundSynth {
     if (this.bgmTimer) {
       clearTimeout(this.bgmTimer);
       this.bgmTimer = null;
+    }
+    if (this.bgmSource) {
+      try {
+        this.bgmSource.stop();
+      } catch (e) {
+        // すでに停止している場合などのエラーを無視
+      }
+      this.bgmSource = null;
     }
   }
 
