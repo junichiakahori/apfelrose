@@ -29,12 +29,18 @@ class SoundSynth {
   constructor() {
     this.ctx = null;
     this.masterGain = null;
+    this.bgmGain = null;
+    this.seGain = null;
     this.bgmTimer = null;
     this.bgmIndex = 0;
     this.isPlayingBgm = false;
     this.tempo = 120; // BPM
     this.bgmType = 'normal'; // 'normal', 'boss', 'ending', 'menu'
     
+    // ON/OFF状態の保持
+    this.isBgmEnabled = true;
+    this.isSeEnabled = true;
+
     // コード進行
     // 通常: Fmaj7 -> G7 -> Em7 -> Am7 (王道進行・エモい)
     this.chordsNormal = [
@@ -72,13 +78,30 @@ class SoundSynth {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     this.ctx = new AudioContextClass();
     this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.setValueAtTime(0.04, this.ctx.currentTime); // 小さめの音量
+    this.masterGain.gain.setValueAtTime(0.04, this.ctx.currentTime); // 小さめのマスター音量
     this.masterGain.connect(this.ctx.destination);
+
+    // BGM用ゲイン
+    this.bgmGain = this.ctx.createGain();
+    this.bgmGain.gain.setValueAtTime(this.isBgmEnabled ? 1.0 : 0.0, this.ctx.currentTime);
+    this.bgmGain.connect(this.masterGain);
+
+    // SE用ゲイン
+    this.seGain = this.ctx.createGain();
+    this.seGain.gain.setValueAtTime(this.isSeEnabled ? 1.0 : 0.0, this.ctx.currentTime);
+    this.seGain.connect(this.masterGain);
   }
 
-  setVolume(enabled) {
-    if (!this.masterGain) return;
-    this.masterGain.gain.setValueAtTime(enabled ? 0.04 : 0, this.ctx.currentTime);
+  setBgmVolume(enabled) {
+    this.isBgmEnabled = enabled;
+    if (!this.bgmGain) return;
+    this.bgmGain.gain.setValueAtTime(enabled ? 1.0 : 0.0, this.ctx.currentTime);
+  }
+
+  setSeVolume(enabled) {
+    this.isSeEnabled = enabled;
+    if (!this.seGain) return;
+    this.seGain.gain.setValueAtTime(enabled ? 1.0 : 0.0, this.ctx.currentTime);
   }
 
   // BGMの開始
@@ -181,7 +204,7 @@ class SoundSynth {
     gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
     
     osc.connect(gainNode);
-    gainNode.connect(this.masterGain);
+    gainNode.connect(this.bgmGain);
     
     osc.start(startTime);
     osc.stop(startTime + duration);
@@ -209,7 +232,7 @@ class SoundSynth {
     gainNode.gain.linearRampToValueAtTime(0.001, now + 0.12);
     
     osc.connect(gainNode);
-    gainNode.connect(this.masterGain);
+    gainNode.connect(this.seGain);
     
     osc.start(now);
     osc.stop(now + 0.12);
@@ -231,7 +254,7 @@ class SoundSynth {
     gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
     
     osc.connect(gainNode);
-    gainNode.connect(this.masterGain);
+    gainNode.connect(this.seGain);
     
     osc.start(now);
     osc.stop(now + 0.28);
@@ -254,7 +277,7 @@ class SoundSynth {
     gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
     
     osc.connect(gainNode);
-    gainNode.connect(this.masterGain);
+    gainNode.connect(this.seGain);
     
     osc.start(now);
     osc.stop(now + 0.06);
@@ -276,7 +299,7 @@ class SoundSynth {
     gainNode.gain.linearRampToValueAtTime(0.001, now + 0.2);
     
     osc.connect(gainNode);
-    gainNode.connect(this.masterGain);
+    gainNode.connect(this.seGain);
     
     osc.start(now);
     osc.stop(now + 0.2);
@@ -302,7 +325,7 @@ class SoundSynth {
       gainNode.gain.exponentialRampToValueAtTime(0.001, triggerTime + 0.25);
       
       osc.connect(gainNode);
-      gainNode.connect(this.masterGain);
+      gainNode.connect(this.seGain);
       
       osc.start(triggerTime);
       osc.stop(triggerTime + 0.25);
@@ -327,7 +350,7 @@ class SoundSynth {
     gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
     
     osc.connect(gainNode);
-    gainNode.connect(this.masterGain);
+    gainNode.connect(this.seGain);
     
     osc.start(now);
     osc.stop(now + 0.7);
@@ -2390,9 +2413,12 @@ function loadVersionInfo() {
     });
 }
 
-// 音声トグル
-document.getElementById('menu-audio-toggle').addEventListener('change', (e) => {
-  audio.setVolume(e.target.checked);
+// BGM・SEトグル
+document.getElementById('menu-bgm-toggle').addEventListener('change', (e) => {
+  audio.setBgmVolume(e.target.checked);
+});
+document.getElementById('menu-se-toggle').addEventListener('change', (e) => {
+  audio.setSeVolume(e.target.checked);
 });
 
 // レスポンス対応スケーリング調整
