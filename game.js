@@ -2621,22 +2621,33 @@ resizeGame();
 loadVersionInfo();
 requestAnimationFrame(gameLoop);
 
-// 初回ユーザージェスチャー（画面クリック・タップ）でオーディオを安全に初期化・再生開始
-function enableAudioOnFirstGesture() {
-  const startAudio = () => {
+// タイトル画面クリックでBGM解放 → メニューへ遷移
+function initTitleScreen() {
+  const titleOverlay = document.getElementById('title-overlay');
+  const menuOverlay  = document.getElementById('menu-overlay');
+
+  const onTitleClick = () => {
+    // オーディオ初期化 & メニューBGM再生
     audio.init();
     audio.startBgm('menu');
-    // 1回実行したらイベントリスナーを解除
-    window.removeEventListener('click', startAudio);
-    window.removeEventListener('touchstart', startAudio);
-    // ヒントをフェードアウト
-    const hint = document.getElementById('audio-unlock-hint');
-    if (hint) hint.classList.add('unlocked');
+
+    // タイトル画面をフェードアウト
+    titleOverlay.classList.add('fade-out');
+
+    // フェードアウト完了後にメニューを表示
+    titleOverlay.addEventListener('transitionend', () => {
+      titleOverlay.classList.add('hidden');
+      menuOverlay.classList.remove('hidden');
+    }, { once: true });
+
+    titleOverlay.removeEventListener('click', onTitleClick);
+    titleOverlay.removeEventListener('touchstart', onTitleClick);
   };
-  window.addEventListener('click', startAudio);
-  window.addEventListener('touchstart', startAudio);
+
+  titleOverlay.addEventListener('click', onTitleClick);
+  titleOverlay.addEventListener('touchstart', onTitleClick);
 }
-enableAudioOnFirstGesture();
+initTitleScreen();
 
 // --- セーブ ＆ ロード機能 ---
 

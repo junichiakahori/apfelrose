@@ -433,25 +433,48 @@ input[type="checkbox"]:checked + .switch-label {
   gap: 4px;
 }
 
-/* BGM解放待ちのヒント表示 */
-.audio-unlock-hint {
-  font-size: 11px;
-  color: var(--neon-cyan);
-  text-align: center;
-  margin-top: 12px;
-  letter-spacing: 0.05em;
-  animation: hint-pulse 1.6s ease-in-out infinite;
-  transition: opacity 0.6s ease;
+/* ===== タイトル画面 ===== */
+.title-overlay {
+  background: radial-gradient(ellipse at center, #0d1530 0%, #020308 100%);
+  cursor: pointer;
+  z-index: 20; /* メニューより手前 */
+  transition: opacity 0.8s ease;
 }
 
-.audio-unlock-hint.unlocked {
+.title-overlay.fade-out {
   opacity: 0;
   pointer-events: none;
 }
 
-@keyframes hint-pulse {
-  0%, 100% { opacity: 0.3; }
-  50%       { opacity: 1; }
+.title-screen-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 48px;
+}
+
+/* タイトルロゴのふわっと登場 */
+.title-animate {
+  animation: title-fade-in 1.2s ease-out both;
+}
+
+@keyframes title-fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 「タップして開始」点滅テキスト */
+.title-tap-hint {
+  font-family: var(--font-retro);
+  font-size: 10px;
+  color: var(--neon-cyan);
+  letter-spacing: 0.12em;
+  animation: tap-blink 1.4s ease-in-out infinite;
+}
+
+@keyframes tap-blink {
+  0%, 100% { opacity: 0.2; }
+  50%       { opacity: 1;   }
 }
 
 /* How to Play Overlay Scroll */
