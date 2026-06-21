@@ -2473,7 +2473,7 @@ addTapListener('btn-return-menu', () => {
   document.getElementById('game-over-overlay').classList.add('hidden');
   document.getElementById('menu-overlay').classList.remove('hidden');
   audio.stopBgm();
-  audio.startBgm('normal');
+  audio.startBgm('menu');
 });
 
 addTapListener('btn-submit-score', submitScore);
@@ -2625,7 +2625,7 @@ requestAnimationFrame(gameLoop);
 function enableAudioOnFirstGesture() {
   const startAudio = () => {
     audio.init();
-    audio.startBgm('normal');
+    audio.startBgm('menu');
     // 1回実行したらイベントリスナーを解除
     window.removeEventListener('click', startAudio);
     window.removeEventListener('touchstart', startAudio);
@@ -2775,7 +2775,7 @@ addTapListener('btn-continue', () => {
 addTapListener('btn-save-quit', () => {
   saveGame();
   audio.stopBgm();
-  audio.startBgm('normal'); // タイトル画面BGM
+  audio.startBgm('menu'); // タイトル画面BGM
   
   // ポーズ画面とHUDを非表示にし、タイトル画面を表示
   document.getElementById('pause-overlay').classList.add('hidden');
