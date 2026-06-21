@@ -879,6 +879,10 @@ class PlayerBullet {
           this.vx = (dx / dist) * speed;
           this.vy = (dy / dist) * speed;
         }
+      } else {
+        // 敵がいない場合は即消去（旋回し続けるのを防ぐ）
+        this.dead = true;
+        return;
       }
       this.x += this.vx * dt;
       this.y += this.vy * dt;
