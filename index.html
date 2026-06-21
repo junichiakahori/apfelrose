@@ -60,6 +60,7 @@
             <span class="hud-label">SCORE</span>
             <span id="hud-score" class="hud-value">00000000</span>
           </div>
+          <button id="btn-hud-pause" class="btn-pause" title="ポーズ (Pause)">⏸</button>
           <div class="hud-level-box">
             <span class="hud-label">LEVEL</span>
             <span id="hud-level" class="hud-value">1</span>
@@ -178,6 +179,28 @@
           <div class="dialogue-footer">
             <span class="tap-hint">TAP / PRESS SPACE TO NEXT</span>
           </div>
+        </div>
+      </div>
+      <!-- PAUSE OVERLAY -->
+      <div id="pause-overlay" class="overlay hidden">
+        <div class="menu-content small-panel">
+          <h2 class="panel-title">PAUSE</h2>
+          <div class="pause-options">
+            <div class="audio-toggle-group">
+              <label class="switch-container">
+                <input type="checkbox" id="pause-bgm-toggle" checked>
+                <span class="switch-label">BGM ON</span>
+              </label>
+              <label class="switch-container">
+                <input type="checkbox" id="pause-se-toggle" checked>
+                <span class="switch-label">SE ON</span>
+              </label>
+            </div>
+          </div>
+          <button id="btn-resume" class="btn btn-primary" style="margin-top: 20px;">
+            <span class="btn-glow"></span>
+            <span class="btn-text">ゲームに戻る (RESUME)</span>
+          </button>
         </div>
       </div>
 

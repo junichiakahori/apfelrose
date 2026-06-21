@@ -9,7 +9,8 @@ const STATE = {
   STORY: 'story',
   PLAYING: 'playing',
   UPGRADE: 'upgrade',
-  GAMEOVER: 'gameover'
+  GAMEOVER: 'gameover',
+  PAUSED: 'paused'
 };
 
 let gameState = STATE.MENU;
@@ -1851,7 +1852,7 @@ function gameLoop(time) {
   starfield.update(dt);
   starfield.draw();
 
-  if (gameState === STATE.PLAYING || gameState === STATE.STORY || gameState === STATE.UPGRADE) {
+  if (gameState === STATE.PLAYING || gameState === STATE.STORY || gameState === STATE.UPGRADE || gameState === STATE.PAUSED) {
     // スポナー（敵湧きタイマー）更新
     if (gameState === STATE.PLAYING) {
       timeCount += dt;
@@ -2181,6 +2182,15 @@ window.addEventListener('keydown', e => {
       nextStoryLine();
     }
   }
+
+  // ポーズ切り替え (Esc または P)
+  if (e.code === 'Escape' || e.code === 'KeyP') {
+    if (gameState === STATE.PLAYING) {
+      pauseGame();
+    } else if (gameState === STATE.PAUSED) {
+      resumeGame();
+    }
+  }
 });
 
 window.addEventListener('keyup', e => {
@@ -2413,13 +2423,61 @@ function loadVersionInfo() {
     });
 }
 
-// BGM・SEトグル
+// BGM・SEトグル (スタートメニュー)
 document.getElementById('menu-bgm-toggle').addEventListener('change', (e) => {
   audio.setBgmVolume(e.target.checked);
+  // ポーズ画面側のトグルも同期
+  const pauseBgm = document.getElementById('pause-bgm-toggle');
+  if (pauseBgm) pauseBgm.checked = e.target.checked;
 });
 document.getElementById('menu-se-toggle').addEventListener('change', (e) => {
   audio.setSeVolume(e.target.checked);
+  // ポーズ画面側のトグルも同期
+  const pauseSe = document.getElementById('pause-se-toggle');
+  if (pauseSe) pauseSe.checked = e.target.checked;
 });
+
+// BGM・SEトグル (ポーズ画面)
+document.getElementById('pause-bgm-toggle').addEventListener('change', (e) => {
+  audio.setBgmVolume(e.target.checked);
+  // メニュー画面側のトグルも同期
+  const menuBgm = document.getElementById('menu-bgm-toggle');
+  if (menuBgm) menuBgm.checked = e.target.checked;
+});
+document.getElementById('pause-se-toggle').addEventListener('change', (e) => {
+  audio.setSeVolume(e.target.checked);
+  // メニュー画面側のトグルも同期
+  const menuSe = document.getElementById('menu-se-toggle');
+  if (menuSe) menuSe.checked = e.target.checked;
+});
+
+// ポーズボタンのクリックイベント
+document.getElementById('btn-hud-pause').addEventListener('click', () => {
+  if (gameState === STATE.PLAYING) {
+    pauseGame();
+  }
+});
+
+// ポーズ解除ボタンのクリックイベント
+document.getElementById('btn-resume').addEventListener('click', () => {
+  if (gameState === STATE.PAUSED) {
+    resumeGame();
+  }
+});
+
+// ポーズ制御関数
+function pauseGame() {
+  gameState = STATE.PAUSED;
+  document.getElementById('pause-bgm-toggle').checked = audio.isBgmEnabled;
+  document.getElementById('pause-se-toggle').checked = audio.isSeEnabled;
+  document.getElementById('pause-overlay').classList.remove('hidden');
+}
+
+function resumeGame() {
+  gameState = STATE.PLAYING;
+  document.getElementById('pause-overlay').classList.add('hidden');
+  lastTime = 0; // ポーズ解除時の経過時間(dt)跳ね上がりを防ぐ
+}
 
 // レスポンス対応スケーリング調整
 // visualViewport API: スマホChromeのアドレスバー・ナビゲーションバーを除いた

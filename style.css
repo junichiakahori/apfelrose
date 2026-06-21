@@ -870,3 +870,41 @@ tr:nth-child(even) {
   0% { transform: translateY(-20px); opacity: 0; }
   100% { transform: translateY(0); opacity: 1; }
 }
+
+/* PAUSE BUTTON & OVERLAY */
+.btn-pause {
+  background: rgba(7, 10, 25, 0.6);
+  border: 1px solid rgba(31, 81, 255, 0.3);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  font-size: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: auto; /* HUD全体の pointer-events: none を上書き */
+  transition: all 0.2s ease;
+  z-index: 6;
+}
+
+.btn-pause:hover {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 10px rgba(5, 249, 226, 0.3);
+  transform: scale(1.05);
+}
+
+.btn-pause:active {
+  transform: scale(0.95);
+}
+
+.small-panel {
+  max-width: 320px;
+  max-height: 50%;
+}
+
+.pause-options {
+  margin: 20px 0;
+  width: 100%;
+}
