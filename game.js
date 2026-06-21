@@ -2144,11 +2144,9 @@ function loadRanking() {
   const rankingList = document.getElementById('ranking-list');
   rankingList.innerHTML = '<tr><td colspan="4" style="text-align:center;">読込中...</td></tr>';
 
-  const url = `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?select=name,score,comment&order=score.desc&limit=10`;
-
-  fetch(url, { headers: SUPABASE_HEADERS })
+  fetch('/api/ranking')
     .then(res => {
-      if (!res.ok) throw new Error('Supabase error');
+      if (!res.ok) throw new Error('API error');
       return res.json();
     })
     .then(data => {
@@ -2200,13 +2198,10 @@ function submitScore() {
 
   const scoreData = { name, score, comment };
 
-  // SupabaseへUPSERT（同名の場合高スコアで上書き）
-  fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}`, {
+  // サーバーAPIへ送信
+  fetch('/api/ranking', {
     method: 'POST',
-    headers: {
-      ...SUPABASE_HEADERS,
-      'Prefer': 'resolution=merge-duplicates'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(scoreData)
   })
   .then(res => {
