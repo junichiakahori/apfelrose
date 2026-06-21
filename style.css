@@ -65,7 +65,8 @@ canvas {
 }
 
 /* Overlays (Menus, Cards, Story, etc.) */
-.overlay {
+  #upgrade-overlay { z-index: 30; }
+
   position: absolute;
   top: 0;
   left: 0;
