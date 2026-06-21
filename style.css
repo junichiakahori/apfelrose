@@ -433,6 +433,27 @@ input[type="checkbox"]:checked + .switch-label {
   gap: 4px;
 }
 
+/* BGM解放待ちのヒント表示 */
+.audio-unlock-hint {
+  font-size: 11px;
+  color: var(--neon-cyan);
+  text-align: center;
+  margin-top: 12px;
+  letter-spacing: 0.05em;
+  animation: hint-pulse 1.6s ease-in-out infinite;
+  transition: opacity 0.6s ease;
+}
+
+.audio-unlock-hint.unlocked {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes hint-pulse {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 1; }
+}
+
 /* How to Play Overlay Scroll */
 .how-to-scroll {
   width: 100%;

@@ -2629,6 +2629,9 @@ function enableAudioOnFirstGesture() {
     // 1回実行したらイベントリスナーを解除
     window.removeEventListener('click', startAudio);
     window.removeEventListener('touchstart', startAudio);
+    // ヒントをフェードアウト
+    const hint = document.getElementById('audio-unlock-hint');
+    if (hint) hint.classList.add('unlocked');
   };
   window.addEventListener('click', startAudio);
   window.addEventListener('touchstart', startAudio);
