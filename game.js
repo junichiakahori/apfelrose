@@ -2723,6 +2723,8 @@ function loadGame() {
     particles = [];
 
     // スポナーの復元（現在のtimeCount以降のイベントのみ登録）
+    // ただしボス出現スポナー（time:52）は後で直接処理するため除外する
+    const BOSS_SPAWN_TIME = 52;
     activeSpawners = waveSpawners.map(s => ({
       ...s,
       processed: s.time <= timeCount
@@ -2734,7 +2736,15 @@ function loadGame() {
     // オーバーレイの切り替え
     document.getElementById('menu-overlay').classList.add('hidden');
     document.getElementById('hud-overlay').classList.remove('hidden');
-    document.getElementById('boss-hud').classList.add('hidden');
+
+    // ボス戦中（time >= 52）でロードされた場合、ボスを即スポーンする
+    if (timeCount >= BOSS_SPAWN_TIME) {
+      isWarningActive = false;
+      enemies.push(new Enemy(WIDTH / 2, -50, 'boss'));
+      document.getElementById('boss-hud').classList.remove('hidden');
+    } else {
+      document.getElementById('boss-hud').classList.add('hidden');
+    }
 
     // BGMの再開
     audio.stopBgm();
