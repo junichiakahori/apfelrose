@@ -1623,6 +1623,7 @@ function triggerDamageFlash(isShield = false) {
 // --- ストーリー一時停止 ---
 function stopGameForStory(eventId) {
   gameState = STATE.STORY;
+  bullets = []; // ダイアログ中に弾が画面上に残らないよう消去
   startStory(eventId);
 }
 
