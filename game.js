@@ -16,6 +16,9 @@ const STATE = {
 
 let gameState = STATE.TITLE;
 
+// localhost限定デバッグモード
+const IS_LOCALHOST = (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+
 // --- キャンバス設定 ---
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
@@ -866,23 +869,27 @@ class PlayerBullet {
         this.dead = true; // 無敵中はレーザー出ない
       }
     } else if (this.type === 'homing') {
-      // ターゲット追従
+      // ターゲット追従と安全処理
       if (!this.target || this.target.dead) {
         this.findTarget();
       }
-      if (this.target) {
-        const dx = this.target.x - this.x;
-        const dy = this.target.y - this.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist > 5) {
-          const speed = 500;
-          this.vx = (dx / dist) * speed;
-          this.vy = (dy / dist) * speed;
-        }
-      } else {
+      if (!this.target) {
         // 敵がいない場合は即消去（旋回し続けるのを防ぐ）
         this.dead = true;
         return;
+      }
+      const dx = this.target.x - this.x;
+      const dy = this.target.y - this.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > 250) {
+        // ターゲットが遠すぎる場合は削除
+        this.dead = true;
+        return;
+      }
+      if (dist > 5) {
+        const speed = 500;
+        this.vx = (dx / dist) * speed;
+        this.vy = (dy / dist) * speed;
       }
       this.x += this.vx * dt;
       this.y += this.vy * dt;
@@ -900,14 +907,19 @@ class PlayerBullet {
 
   findTarget() {
     let minDist = 9999;
+    let found = false;
     enemies.forEach(e => {
       if (e.dead) return;
       const d = Math.hypot(e.x - this.x, e.y - this.y);
       if (d < minDist) {
         minDist = d;
         this.target = e;
+        found = true;
       }
     });
+    if (!found) {
+      this.target = null;
+    }
   }
 
   draw() {
@@ -1659,9 +1671,17 @@ function showUpgradeOverlay() {
     pool.push({ key: 'bomb', currentLv: 0, name: '大掃除ボム充填', desc: 'ボムを1つ獲得します。', icon: '💣' });
   }
 
-  // ランダムに3枚抽選
-  const shuffled = pool.sort(() => 0.5 - Math.random());
-  const selected = shuffled.slice(0, 3);
+  // [localhost限定] デバッグモードは全スキルを表示、通常は3枚抽選
+  let selected;
+  if (IS_LOCALHOST) {
+    // 全スキル＋heal/bomb候補も常に追加
+    selected = [...pool];
+    selected.push({ key: 'heal', currentLv: 0 });
+    selected.push({ key: 'bomb', currentLv: 0 });
+  } else {
+    const shuffled = pool.sort(() => 0.5 - Math.random());
+    selected = shuffled.slice(0, 3);
+  }
 
   selected.forEach(skill => {
     let cardInfo = SKILL_CARDS[skill.key];
@@ -2274,6 +2294,11 @@ window.addEventListener('keydown', e => {
       resumeGame();
     }
   }
+
+  // [localhost限定] Shift+D でデバッグパネル開閉
+  if (IS_LOCALHOST && e.code === 'KeyD' && e.shiftKey) {
+    toggleDebugPanel();
+  }
 });
 
 window.addEventListener('keyup', e => {
@@ -2803,3 +2828,141 @@ addTapListener('btn-save-quit', () => {
 
 // 起動時にセーブデータ確認
 checkSaveDataDOM();
+
+// --- localhost限定デバッグ機能 ---
+
+if (IS_LOCALHOST) {
+  // デバッグパネルのDOM生成
+  const debugPanel = document.createElement('div');
+  debugPanel.id = 'debug-panel';
+  debugPanel.style.cssText = `
+    position: fixed; top: 10px; right: 10px; z-index: 9999;
+    background: rgba(10,10,30,0.92); border: 1.5px solid #05f9e2;
+    border-radius: 10px; padding: 14px 18px; min-width: 240px;
+    color: #e8e0f0; font-family: 'Share Tech Mono', monospace; font-size: 13px;
+    box-shadow: 0 0 24px rgba(5,249,226,0.25);
+    display: none; user-select: none;
+  `;
+  debugPanel.innerHTML = `
+    <div style="color:#05f9e2;font-weight:bold;margin-bottom:10px;font-size:14px;">🛠 DEBUG PANEL <span style="font-size:10px;opacity:0.6;">[Shift+D で閉じる]</span></div>
+    <div style="display:grid;gap:6px;">
+      <button class="dbg-btn" onclick="debugAddXp()">⬆️ XP +500</button>
+      <button class="dbg-btn" onclick="debugLevelUp()">🌹 レベルアップ強制</button>
+      <button class="dbg-btn" onclick="debugHeal()">❤️ HP全回復</button>
+      <button class="dbg-btn" onclick="debugAddBomb()">💣 ボム +1</button>
+      <button class="dbg-btn" onclick="debugKillAll()">💀 敵を全滅</button>
+      <button class="dbg-btn" onclick="debugSpawnBoss()">👾 ボス即スポーン</button>
+      <button class="dbg-btn" onclick="debugSkipToUpgrade()">🃏 アップグレード画面を開く</button>
+      <button class="dbg-btn" style="background:rgba(255,42,133,0.2);border-color:#ff2a85;" onclick="debugKillPlayer()">☠️ プレイヤーを即死させる</button>
+    </div>
+    <div id="dbg-info" style="margin-top:10px;opacity:0.7;font-size:11px;border-top:1px solid rgba(255,255,255,0.1);padding-top:8px;"></div>
+  `;
+
+  // ボタンのスタイル
+  const style = document.createElement('style');
+  style.textContent = `
+    .dbg-btn {
+      background: rgba(5,249,226,0.1);
+      border: 1px solid #05f9e2;
+      color: #e8e0f0;
+      border-radius: 6px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      text-align: left;
+      transition: background 0.15s;
+    }
+    .dbg-btn:hover { background: rgba(5,249,226,0.25); }
+  `;
+  document.head.appendChild(style);
+  document.body.appendChild(debugPanel);
+
+  // キャンバス外にショートカットキーのヒントバッジを表示
+  const debugHint = document.createElement('div');
+  debugHint.id = 'debug-hint';
+  debugHint.style.cssText = `
+    position: fixed;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10,10,30,0.75);
+    border: 1px solid #05f9e2;
+    border-radius: 6px;
+    padding: 4px 12px;
+    color: #05f9e2;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    pointer-events: none;
+    z-index: 99999;
+    opacity: 0.7;
+    white-space: nowrap;
+  `;
+  debugHint.textContent = '🛠 DEV MODE  |  Shift + D → Debug Panel';
+  document.body.appendChild(debugHint);
+
+  // パネル開閉
+  window.toggleDebugPanel = function() {
+    const isHidden = debugPanel.style.display === 'none';
+    debugPanel.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) updateDebugInfo();
+  };
+
+  function updateDebugInfo() {
+    const info = document.getElementById('dbg-info');
+    if (!info) return;
+    info.innerHTML = `
+      状態: ${gameState}<br>
+      HP: ${player.hp}/${player.maxHp} | Lv: ${player.level}<br>
+      XP: ${player.xp}/${player.xpNeeded}<br>
+      スコア: ${score} | 敵数: ${enemies.length}<br>
+      スキル: ${Object.entries(player.skills).map(([k,v])=>k+':'+v).join(', ')}
+    `;
+  }
+
+  // デバッグ関数
+  window.debugAddXp = function() {
+    player.gainXp(500);
+    updateDebugInfo();
+  };
+  window.debugLevelUp = function() {
+    player.level++;
+    player.xp = 0;
+    player.xpNeeded = Math.floor(player.xpNeeded * 1.2);
+    const prevState = gameState;
+    gameState = STATE.UPGRADE;
+    showUpgradeOverlay();
+    updateDebugInfo();
+  };
+  window.debugHeal = function() {
+    player.hp = player.maxHp;
+    updateHud();
+    updateDebugInfo();
+  };
+  window.debugAddBomb = function() {
+    player.bombs = Math.min(player.maxBombs, player.bombs + 1);
+    updateHud();
+    updateDebugInfo();
+  };
+  window.debugKillAll = function() {
+    enemies.forEach(e => e.dead = true);
+    enemies = [];
+    updateDebugInfo();
+  };
+  window.debugSpawnBoss = function() {
+    enemies.push(new Enemy(WIDTH / 2, -50, 'boss'));
+    document.getElementById('boss-hud').classList.remove('hidden');
+    updateDebugInfo();
+  };
+  window.debugSkipToUpgrade = function() {
+    gameState = STATE.UPGRADE;
+    showUpgradeOverlay();
+  };
+  window.debugKillPlayer = function() {
+    player.hp = 0;
+    updateDebugInfo();
+  };
+
+  console.log('%c[DEBUG MODE] Shift+D でデバッグパネルを開閉できます', 'color:#05f9e2;font-weight:bold;');
+}

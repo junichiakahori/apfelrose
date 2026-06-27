@@ -65,7 +65,13 @@ canvas {
 }
 
 /* Overlays (Menus, Cards, Story, etc.) */
-  #upgrade-overlay { z-index: 30; }
+  #upgrade-overlay {
+    z-index: 30;
+    overflow-y: auto;
+    justify-content: flex-start;
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
 .overlay {
   position: absolute;
   top: 0;
