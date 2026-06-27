@@ -2169,9 +2169,11 @@ function loadRanking() {
   const rankingList = document.getElementById('ranking-list');
   rankingList.innerHTML = '<tr><td colspan="4" style="text-align:center;">読込中...</td></tr>';
 
-  fetch('/api/ranking')
+  const url = `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?select=name,score,comment&order=score.desc&limit=10`;
+
+  fetch(url, { headers: SUPABASE_HEADERS })
     .then(res => {
-      if (!res.ok) throw new Error('API error');
+      if (!res.ok) throw new Error('Supabase error');
       return res.json();
     })
     .then(data => {
@@ -2221,39 +2223,68 @@ function submitScore() {
   // 名前を次回のためにローカル保存
   localStorage.setItem('apfelrose_player_name', name);
 
-  const scoreData = { name, score, comment };
+  // Supabaseに送信する前に既存のハイスコアをチェック
+  const checkUrl = `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?name=eq.${encodeURIComponent(name)}&select=score`;
 
-  // サーバーAPIへ送信
-  fetch('/api/ranking', {
+  fetch(checkUrl, { headers: SUPABASE_HEADERS })
+    .then(res => {
+      if (!res.ok) throw new Error('Failed to check existing score');
+      return res.json();
+    })
+    .then(data => {
+      if (data.length > 0) {
+        const existingScore = data[0].score;
+        if (score <= existingScore) {
+          // 既存スコアより低い場合は更新せず、そのままランキングを表示
+          showRankingScreen();
+          return;
+        }
+      }
+      // 新規登録または既存スコアより高ければUPSERTを実行
+      performSupabaseUpsert(name, score, comment);
+    })
+    .catch(() => {
+      // エラー時はLocalStorageフォールバック
+      fallbackLocalStorage(name, score, comment);
+    });
+}
+
+function performSupabaseUpsert(name, score, comment) {
+  const scoreData = { name, score, comment };
+  
+  fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?on_conflict=name`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      ...SUPABASE_HEADERS,
+      'Prefer': 'resolution=merge-duplicates'
+    },
     body: JSON.stringify(scoreData)
   })
   .then(res => {
     if (!res.ok) throw new Error('Save failed');
-    return res.json();
-  })
-  .then(() => {
     showRankingScreen();
   })
   .catch(() => {
-    // オフライン/ローカル保存フォールバック
-    let localData = JSON.parse(localStorage.getItem('apfelrose_ranking') || '[]');
-
-    // 重複チェック（高スコア上書き）
-    const existingIdx = localData.findIndex(r => r.name === name);
-    if (existingIdx !== -1) {
-      if (score > localData[existingIdx].score) {
-        localData[existingIdx] = { name, score, comment, created_at: new Date().toISOString() };
-      }
-    } else {
-      localData.push({ name, score, comment, created_at: new Date().toISOString() });
-    }
-
-    localData.sort((a, b) => b.score - a.score);
-    localStorage.setItem('apfelrose_ranking', JSON.stringify(localData.slice(0, 100)));
-    showRankingScreen();
+    fallbackLocalStorage(name, score, comment);
   });
+}
+
+function fallbackLocalStorage(name, score, comment) {
+  let localData = JSON.parse(localStorage.getItem('apfelrose_ranking') || '[]');
+
+  // 重複チェック（高スコア上書き）
+  const existingIdx = localData.findIndex(r => r.name === name);
+  if (existingIdx !== -1) {
+    if (score > localData[existingIdx].score) {
+      localData[existingIdx] = { name, score, comment, created_at: new Date().toISOString() };
+    }
+  } else {
+    localData.push({ name, score, comment, created_at: new Date().toISOString() });
+  }
+
+  localData.sort((a, b) => b.score - a.score);
+  localStorage.setItem('apfelrose_ranking', JSON.stringify(localData.slice(0, 100)));
+  showRankingScreen();
 }
 
 function showRankingScreen() {
