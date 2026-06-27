@@ -1,5 +1,13 @@
 # 🌹 アプフェルローゼ 〜追憶のメロディ〜 - 変更履歴 (CHANGELOG)
 
+### v1.2.3 (2026/06/27)
+- **機能改善 (スコアランキング保存機能の信頼性向上)**
+  - Node.js未インストール環境（Python環境のみ）でもスコアランキングがローカルに恒久的に登録・保存されるよう、API対応のPython製簡易ローカルサーバー（[server.py](file:///Users/junichiakahori/Documents/Antigravity/apfelrose/server.py)）を新規導入。
+  - `start_server.command` の起動サーバーを、静的配信専用の python モジュールから新規作成した `server.py` に移行。これにより、サーバー起動時に自動的に `ranking.json` への永続保存が機能するよう改善。
+  - [README.md](file:///Users/junichiakahori/Documents/Antigravity/apfelrose/README.md) の起動手順とサーバー動作解説を更新。
+
+---
+
 ### v1.2.2 (2026/06/27)
 - **開発ツール改善**
   - localhost起動時（ローカル開発環境）限定で、画面右上にデバッグパネルを表示する機能を追加。`Shift + D` キーで開閉可能。

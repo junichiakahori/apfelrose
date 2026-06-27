@@ -13,5 +13,5 @@ echo "=========================================================="
 # バックグラウンドで1秒待ってからブラウザでlocalhostを開く
 (sleep 1 && open http://localhost:3000) &
 
-# Python3で簡易サーバーをポート3000番で起動
-python3 -m http.server 3000
+# Python3でAPI対応簡易サーバーをポート3000番で起動
+python3 server.py 3000
